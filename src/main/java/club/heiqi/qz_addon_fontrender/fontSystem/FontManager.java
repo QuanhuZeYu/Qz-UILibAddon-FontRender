@@ -32,6 +32,15 @@ public class FontManager {
         return findFont(t);
     }
 
+    public static Font findItalicFont(String t) {
+        int codepoint = t.codePointAt(0);
+        for (Font f : fonts) {
+            if (Objects.requireNonNull(f.getTypeface()).isItalic())
+                if (f.getUTF32Glyph(codepoint) !=0) return f;
+        }
+        return findFont(t);
+    }
+
     public static void registryChars() {
         List<UnicodeRecorder.UnicodeType> types = Arrays.asList(
                 UnicodeRecorder.UnicodeType.BASIC_LATIN,
@@ -69,9 +78,13 @@ public class FontManager {
             }
         }
         // 添加完成后上传至GPU
+        int i = 0;
         for (Map.Entry<Page, String> entry : Page.GLOBAL.entrySet()) {
             Page page = entry.getKey();
+            String type = entry.getValue();
             page.uploadGPU();
+            /*page.savePNG(type+"-"+i);*/
+            i++;
         }
     }
 }

@@ -19,7 +19,7 @@ public class ClientRenderPoller {
                 if (page.isDirty) {
                     page.uploadGPU();
                     // DEBUG保存图像查看
-                    page.savePNG(type+"-"+i);
+                    /*page.savePNG(type+"-"+i);*/
                 }
                 i++;
             }
