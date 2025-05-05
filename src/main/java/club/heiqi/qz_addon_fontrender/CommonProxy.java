@@ -13,9 +13,6 @@ public class CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         Config config = new Config().register();
         Config.init(event.getSuggestedConfigurationFile());
-
-        ConstField.LOG.info(Config.greeting);
-        ConstField.LOG.info("I am MyMod at version " + Tags.VERSION);
     }
 
     // load "Do your mod setup. Build whatever data structures you care about. Register recipes." (Remove if not needed)
