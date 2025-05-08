@@ -20,5 +20,5 @@ skijaFont.drawText("𓀀𓀁𓀂𓀃 ㊙🈲🉐", x, y); // 古埃及象形文�
 
 ##📥 安装要求
 **前置依赖**
-- 必须安装 Qz-UILib
+- 必须安装 [Qz-UILib](https://github.com/QuanhuZeYu/Qz-UILib)
 - Minecraft 1.7.10
