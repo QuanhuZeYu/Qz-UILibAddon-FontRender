@@ -29,7 +29,7 @@ public class MYConfig extends GuiConfig {
     private static List<IConfigElement> getConfigElements() {
         List<IConfigElement> elements = new ArrayList<>();
 
-        List<String> topCategories = Arrays.asList(Configuration.CATEGORY_GENERAL);
+        List<String> topCategories = Arrays.asList(Configuration.CATEGORY_GENERAL,Config.CLIENT);
         for (String categoryName : topCategories) {
             ConfigCategory category = Config.config.getCategory(categoryName);
             elements.add(new ConfigElement(category));
