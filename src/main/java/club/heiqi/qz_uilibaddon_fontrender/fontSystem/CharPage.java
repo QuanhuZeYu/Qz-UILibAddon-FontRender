@@ -1,9 +1,9 @@
 package club.heiqi.qz_uilibaddon_fontrender.fontSystem;
 
-import club.heiqi.qz_uilib.ConstField;
-import club.heiqi.qz_uilib.skija.font.FontLoader;
+import club.heiqi.qz_uilibaddon_fontrender.ConstField;
+import club.heiqi.qz_uilib.skija.font.*;
 import io.github.humbleui.skija.*;
-import io.github.humbleui.types.Rect;
+import io.github.humbleui.types.*;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.Lock;
@@ -71,7 +72,7 @@ public class CharPage {
     public LinkedBlockingDeque<String> waitList = new LinkedBlockingDeque<>();
     public Lock lock = new ReentrantLock(true);
     public void addChar(String c) {
-        LOG.info("尝试添加字符:{}",c);
+        // LOG.info("尝试添加字符:{}",c);
         if (isFull()) return;
         // 避免重复添加
         if (waitList.contains(c) || chars.containsKey(c)) return;
