@@ -1,6 +1,10 @@
 package club.heiqi.qz_uilibaddon_fontrender.forgeConfigGUI;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 import club.heiqi.qz_uilibaddon_fontrender.ConstField;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
@@ -9,13 +13,20 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Config {
+    public static Logger LOG = LogManager.getLogger();
+
     public static Configuration config;
     public static String configPath;
+    public static String CLIENT = "client";
 
-    public static String greeting = "Hello World";
-    public static float dynamicFontSize = 0.0267F;
+    public static double advance = 0;
+    public static double height = 8;
+    public static double shadowOffsetX = 0.5;
+    public static double shadowOffsetY = 0.5;
 
     public static void init(File configFile) {
         configPath = configFile.getAbsolutePath();
@@ -28,25 +39,43 @@ public class Config {
 
     @SubscribeEvent
     public void onConfigChange(ConfigChangedEvent event) {
-        if (event.modID.equalsIgnoreCase(ConstField.MODID)) {
-            load();
-            save();
-        }
-    }
-
-    public static void load() {
-        Property property = config.get(Configuration.CATEGORY_GENERAL, "greeting", "Hello World", "How shall I greet?");
-        greeting = property.getString();
-        Property property2 = config.get(Configuration.CATEGORY_GENERAL, "dynamicFontSize", 0.0267, "字体高度所占屏幕高度百分比",0,1);
-        dynamicFontSize = (float) property2.getDouble();
         config.save();
+        load();
     }
 
-    public static void save() {
-        Property property = config.get(Configuration.CATEGORY_GENERAL, "greeting", "Hello World", "How shall I greet?");
-        property.set(greeting);
-        Property property2 = config.get(Configuration.CATEGORY_GENERAL, "dynamicFontSize", 0.0267, "字体高度所占屏幕高度百分比",0,1);
-        property2.set(dynamicFontSize);
+    public static void walkMap(Consumer<Property> consumer) {
+        List<Property> properties = new ArrayList<>();
+        Property advance = config.get(CLIENT,"advance",0.1,"控制字符横向间距",Double.MIN_VALUE,Double.MAX_VALUE);
+        Property height = config.get(CLIENT,"height",8,"控制字符高度",Double.MIN_VALUE,Double.MAX_VALUE);
+        Property shadowOffsetX = config.get(CLIENT,"shadowOffsetX",0.5,"控制字体阴影横向偏移",Double.MIN_VALUE,Double.MAX_VALUE);
+        Property shadowOffsetY = config.get(CLIENT,"shadowOffsetY",0.5,"控制字体阴影纵向偏移",Double.MIN_VALUE,Double.MAX_VALUE);
+
+        properties.add(advance);
+        properties.add(height);
+        properties.add(shadowOffsetX);
+        properties.add(shadowOffsetY);
+
+        properties.forEach(consumer);
+    }
+
+    /**
+     * 将配置写入字段
+     */
+    public static void load() {
+        walkMap(p -> {
+            String key = p.getName();
+            try {
+                Field field = Config.class.getField(key);
+                if (field.getType() == double.class) {
+                    field.setDouble(null,p.getDouble());
+                }
+            } catch (NoSuchFieldException e) {
+                LOG.warn("无法获取字段:{}",key);
+            } catch (IllegalAccessException e) {
+                LOG.warn("无法设置字段:{} -> {}",key,p.getDefault());
+            }
+        });
+        config.save();
     }
 
     public Config register() {
