@@ -45,6 +45,7 @@ public abstract class FontRenderer_Mixin {
         // 默认color为上级调用者设置
         int color = (redI << 16) | (greenI << 8) | blueI;
         int cacheColor = color;
+        int mask = 0;
         List<RenderSection> sections = new ArrayList<>();
         for (int i = 0; i < text.length(); i++) {
             int codepoint = text.codePointAt(i);
@@ -77,23 +78,23 @@ public abstract class FontRenderer_Mixin {
                         }
                     }
                     case "k" -> {// 16
-                        int mask = 0b10000; // 随机化
+                        mask |= 0b10000; // 随机化
                         forSection.addMask(mask);
                     }
                     case "l" -> {
-                        int mask = 0b1000; // 粗体
+                        mask |= 0b1000; // 粗体
                         forSection.addMask(mask);
                     }
                     case "m" -> {
-                        int mask = 0b100; // 删除线
+                        mask |= 0b100; // 删除线
                         forSection.addMask(mask);
                     }
                     case "n" -> {
-                        int mask = 0b10; // 下划线
+                        mask |= 0b10; // 下划线
                         forSection.addMask(mask);
                     }
                     case "o" -> {
-                        int mask = 0b1; // 斜体
+                        mask |= 0b1; // 斜体
                         forSection.addMask(mask);
                     }
                     case "r" -> {
@@ -103,14 +104,18 @@ public abstract class FontRenderer_Mixin {
                         forSection.alpha = ((FontRenderer)((Object)this)).alpha;
                         sections.add(forSection.copy());
                         forSection = new RenderSection();
+                        mask = 0;
                     }
                     default -> {
+                        // 分割结尾
                         if (forSection.hasColor) {
                             forSection.setRGB(color);
                             forSection.restAlpha = ((FontRenderer)((Object)this)).alpha;
                             sections.add(forSection.copy());
                             forSection = new RenderSection();
+                            mask = 0;
                         }
+                        // 分割起始
                         else {
                             forSection.setRGB(color);
                             forSection.alpha = ((FontRenderer)((Object)this)).alpha;
