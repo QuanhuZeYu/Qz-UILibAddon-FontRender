@@ -3,6 +3,7 @@ package club.heiqi.qz_uilibaddon_fontrender.mixins.earlyMixins;
 import club.heiqi.qz_uilibaddon_fontrender.ClientProxy;
 import club.heiqi.qz_uilibaddon_fontrender.fontSystem.FontEngine;
 import club.heiqi.qz_uilibaddon_fontrender.fontSystem.RenderSection;
+import club.heiqi.qz_uilibaddon_fontrender.forgeConfigGUI.Config;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -142,8 +143,8 @@ public abstract class FontRenderer_Mixin {
             }
         }
         if (shadow) {
-            ((FontRenderer) ((Object) this)).posX -= 0.5f;
-            ((FontRenderer) ((Object) this)).posY -= 0.5f;
+            ((FontRenderer) ((Object) this)).posX -= (float) Config.shadowOffsetX;
+            ((FontRenderer) ((Object) this)).posY -= (float) Config.shadowOffsetY;
         }
         for (RenderSection section : sections) {
             section.setGLColor();
@@ -152,6 +153,7 @@ public abstract class FontRenderer_Mixin {
                 int codepoint = section.text.codePointAt(i);
                 String c = new String(Character.toChars(codepoint));
                 float width = FontEngine.renderCharAt(c,((FontRenderer)((Object)this)).posX,((FontRenderer)((Object)this)).posY,section.mask);
+                section.renderExtraStyle(((FontRenderer)((Object)this)).posX,((FontRenderer)((Object)this)).posY,width, (float) Config.height);
                 ((FontRenderer)((Object)this)).posX += width;
             }
             section.restGLColor();
