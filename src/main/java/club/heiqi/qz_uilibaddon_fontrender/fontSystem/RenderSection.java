@@ -1,6 +1,6 @@
 package club.heiqi.qz_uilibaddon_fontrender.fontSystem;
 
-import static org.lwjgl.opengl.GL11.glColor4f;
+import static org.lwjgl.opengl.GL11.*;
 
 public class RenderSection {
     public boolean isStart = false;
@@ -88,7 +88,24 @@ public class RenderSection {
         float b = ((rgb) & 255) / 255f;
         glColor4f(r, g, b, alpha);
     }
-
+    public void renderExtraStyle(float x,float y,float width,float height) {
+        if (delete) {
+            glDisable(GL_TEXTURE_2D);
+            glBegin(GL_QUADS);
+            glVertex2f(x+width,y+(height/2));   glVertex2f(x,y+(height/2));
+            glVertex2f(x,y+(height/2)+0.5f);      glVertex2f(x+width,y+(height/2)+0.5f);
+            glEnd();
+            glEnable(GL_TEXTURE_2D);
+        }
+        if (underline) {
+            glDisable(GL_TEXTURE_2D);
+            glBegin(GL_QUADS);
+            glVertex2f(x+width,y+height);       glVertex2f(x,y+height);
+            glVertex2f(x,y+height+1f);          glVertex2f(x+width,y+height+1f);
+            glEnd();
+            glEnable(GL_TEXTURE_2D);
+        }
+    }
     public void restGLColor() {
         if (rest) {
             float r = ((restRGB >> 16) & 255) / 255f;
