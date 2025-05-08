@@ -1,9 +1,12 @@
 package club.heiqi.qz_uilibaddon_fontrender.fontSystem;
 
 import club.heiqi.qz_uilib.skija.font.FontLoader;
+import club.heiqi.qz_uilibaddon_fontrender.forgeConfigGUI.Config;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.lwjgl.opengl.GL11;
+
+import java.util.*;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -12,6 +15,16 @@ public class FontEngine {
      * 高速缓存<br/>
      * "type-字符": 字符信息*/
     public static Cache<String, CharPage.StoredChar> cache = CacheBuilder.newBuilder().maximumSize(10000).build();
+    public static Random random = new Random();
+    public static int[] LATIN = new int[] {0x80,0x24f};
+    public static int[] LATIN_EXT = new int[] {0xa720,0xa7ff};
+    public static int[] TABULAR = new int[] {0x2500,0x257f};
+    public static int[] YI_LANG = new int[] {0xa000,0xa4cf};
+    public static int[] JAVA_CHAR = new int[] {0xa980,0xa9df};
+    public static int[] COPTIC = new int[] {0x102e0,0x102ff};
+    public static List<int[]> FirstLevel = Arrays.asList(
+        LATIN,LATIN_EXT,TABULAR,YI_LANG,JAVA_CHAR,COPTIC
+    );
 
     /**
      *
@@ -26,6 +39,11 @@ public class FontEngine {
         String hashName;
         CharType type;
         switch (mask) {
+            case 0b10000 -> {
+                int codepoint = getRandomChar();
+                c = new String(Character.toChars(codepoint));
+                type = CharType.NORMAL;
+            }
             case 0b1000 -> {
                 type = CharType.BOLD;
             }
@@ -64,8 +82,8 @@ public class FontEngine {
         }
         // 3.使用获取到的字形信息进行渲染操作
         width = (storedChar.right-storedChar.left)*(8f/storedChar.charPage.charSize);
-        storedChar.renderAt(x,y,width,8f);
-        return Math.min(width,8);
+        storedChar.renderAt(x,y,width, (float) Config.height);
+        return (float) (Math.min(width,8) + Config.advance);
     }
 
     /**
@@ -99,6 +117,19 @@ public class FontEngine {
         glColor3f(1.0f, 1.0f, 1.0f); // 恢复默认白色
     }
 
+
+
+
+
+
+
+    public static int getRandomChar() {
+        int random1L = random.nextInt(5);
+        int[] level2 = FirstLevel.get(random1L);
+        int l2Length = level2.length;
+        int random2L = random.nextInt(l2Length-1);
+        return level2[random2L];
+    }
 
     public static void MarkString(String text) {
 
