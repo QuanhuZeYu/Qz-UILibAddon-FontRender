@@ -28,6 +28,8 @@ public class Config {
     public static double shadowOffsetX = 0.5;
     public static double shadowOffsetY = 0.5;
 
+    public static boolean useUnicodeFix = true;
+
     public static void init(File configFile) {
         configPath = configFile.getAbsolutePath();
         config = new Configuration(configFile);
@@ -50,10 +52,14 @@ public class Config {
         Property shadowOffsetX = config.get(CLIENT,"shadowOffsetX",0.5,"控制字体阴影横向偏移",Double.MIN_VALUE,Double.MAX_VALUE);
         Property shadowOffsetY = config.get(CLIENT,"shadowOffsetY",0.5,"控制字体阴影纵向偏移",Double.MIN_VALUE,Double.MAX_VALUE);
 
+        Property useUnicodeFix = config.get(CLIENT,"useUnicodeFix",true,"是否启用unicode修复功能");
+
         properties.add(advance);
         properties.add(height);
         properties.add(shadowOffsetX);
         properties.add(shadowOffsetY);
+
+        properties.add(useUnicodeFix);
 
         properties.forEach(consumer);
     }
@@ -68,6 +74,9 @@ public class Config {
                 Field field = Config.class.getField(key);
                 if (field.getType() == double.class) {
                     field.setDouble(null,p.getDouble());
+                }
+                else if (field.getType() == boolean.class) {
+                    field.setBoolean(null,p.getBoolean());
                 }
             } catch (NoSuchFieldException e) {
                 LOG.warn("无法获取字段:{}",key);

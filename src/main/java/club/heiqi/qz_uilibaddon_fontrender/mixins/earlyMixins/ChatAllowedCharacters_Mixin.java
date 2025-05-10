@@ -1,5 +1,6 @@
 package club.heiqi.qz_uilibaddon_fontrender.mixins.earlyMixins;
 
+import club.heiqi.qz_uilibaddon_fontrender.forgeConfigGUI.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,6 +16,7 @@ public class ChatAllowedCharacters_Mixin {
         remap = true
     )
     private static void qz_uilibAddonFontRender$filerAllowedCharacters(String input, CallbackInfoReturnable<String> ci) {
+        if (!Config.useUnicodeFix) return;
         StringBuilder stringbuilder = new StringBuilder();
 
         for (int i = 0; i < input.length(); i++) {
