@@ -21,7 +21,7 @@ public class ChatAllowedCharacters_Mixin {
             int codepoint = input.codePointAt(i);
             String t = new String(Character.toChars(codepoint));
 
-            if (!t.equals("§") && !t.equals(" ") && !t.equals("\u007F")) {
+            if (!t.equals("§")) {
                 stringbuilder.append(t);
             }
         }
