@@ -34,9 +34,11 @@ public class Config {
         configPath = configFile.getAbsolutePath();
         config = new Configuration(configFile);
         load();
-        /*if (configuration.hasChanged()) {
-            configuration.save();
-        }*/
+        /*
+         * if (configuration.hasChanged()) {
+         * configuration.save();
+         * }
+         */
     }
 
     @SubscribeEvent
@@ -47,12 +49,12 @@ public class Config {
 
     public static void walkMap(Consumer<Property> consumer) {
         List<Property> properties = new ArrayList<>();
-        Property advance = config.get(CLIENT,"advance",0.1,"控制字符横向间距",Double.MIN_VALUE,Double.MAX_VALUE);
-        Property height = config.get(CLIENT,"height",8,"控制字符高度",Double.MIN_VALUE,Double.MAX_VALUE);
-        Property shadowOffsetX = config.get(CLIENT,"shadowOffsetX",0.5,"控制字体阴影横向偏移",Double.MIN_VALUE,Double.MAX_VALUE);
-        Property shadowOffsetY = config.get(CLIENT,"shadowOffsetY",0.5,"控制字体阴影纵向偏移",Double.MIN_VALUE,Double.MAX_VALUE);
+        Property advance = config.get(CLIENT, "advance", 1, "控制字符横向间距", Double.MIN_VALUE, Double.MAX_VALUE);
+        Property height = config.get(CLIENT, "height", 8, "控制字符高度", Double.MIN_VALUE, Double.MAX_VALUE);
+        Property shadowOffsetX = config.get(CLIENT, "shadowOffsetX", 0.5, "控制字体阴影横向偏移", Double.MIN_VALUE,Double.MAX_VALUE);
+        Property shadowOffsetY = config.get(CLIENT, "shadowOffsetY", 0.5, "控制字体阴影纵向偏移", Double.MIN_VALUE,Double.MAX_VALUE);
 
-        Property useUnicodeFix = config.get(CLIENT,"useUnicodeFix",true,"是否启用unicode修复功能");
+        Property useUnicodeFix = config.get(CLIENT, "useUnicodeFix", true, "是否启用unicode修复功能");
 
         properties.add(advance);
         properties.add(height);
@@ -73,15 +75,14 @@ public class Config {
             try {
                 Field field = Config.class.getField(key);
                 if (field.getType() == double.class) {
-                    field.setDouble(null,p.getDouble());
-                }
-                else if (field.getType() == boolean.class) {
-                    field.setBoolean(null,p.getBoolean());
+                    field.setDouble(null, p.getDouble());
+                } else if (field.getType() == boolean.class) {
+                    field.setBoolean(null, p.getBoolean());
                 }
             } catch (NoSuchFieldException e) {
-                LOG.warn("无法获取字段:{}",key);
+                LOG.warn("无法获取字段:{}", key);
             } catch (IllegalAccessException e) {
-                LOG.warn("无法设置字段:{} -> {}",key,p.getDefault());
+                LOG.warn("无法设置字段:{} -> {}", key, p.getDefault());
             }
         });
         config.save();
@@ -92,51 +93,4 @@ public class Config {
         MinecraftForge.EVENT_BUS.register(this);
         return this;
     }
-
-    /*public static class ConfigObject<T> {
-        public Field field;
-        public String category;
-        public String comment;
-        public Field defaultValue;
-        @Nullable public Field minValue;
-        @Nullable public Field maxValue;
-
-        public String getName() {return field.getName();}
-        public String getCategory() {return category;}
-        public String getComment() {return comment;}
-        public T getField() {
-            try {
-                return (T) field.get(this);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        public T getDefaultValue() {
-            try {
-                return (T) defaultValue.get(this);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        public T getMinValue() {
-            try {
-                if (minValue != null) {
-                    return (T) minValue.get(this);
-                }
-                return null;
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        public T getMaxValue() {
-            try {
-                if (maxValue != null) {
-                    return (T) maxValue.get(this);
-                }
-                return null;
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }*/
 }
