@@ -27,8 +27,10 @@ public class Config {
     public static double height = 8;
     public static double shadowOffsetX = 0.5;
     public static double shadowOffsetY = 0.5;
+    public static double fixWidth = 7;
 
     public static boolean useUnicodeFix = true;
+    public static boolean useFixWidth = false;
 
     public static void init(File configFile) {
         configPath = configFile.getAbsolutePath();
@@ -49,19 +51,23 @@ public class Config {
 
     public static void walkMap(Consumer<Property> consumer) {
         List<Property> properties = new ArrayList<>();
-        Property advance = config.get(CLIENT, "advance", 1, "控制字符横向间距", Double.MIN_VALUE, Double.MAX_VALUE);
-        Property height = config.get(CLIENT, "height", 8, "控制字符高度", Double.MIN_VALUE, Double.MAX_VALUE);
-        Property shadowOffsetX = config.get(CLIENT, "shadowOffsetX", 0.5, "控制字体阴影横向偏移", Double.MIN_VALUE,Double.MAX_VALUE);
-        Property shadowOffsetY = config.get(CLIENT, "shadowOffsetY", 0.5, "控制字体阴影纵向偏移", Double.MIN_VALUE,Double.MAX_VALUE);
+        Property advance = config.get(CLIENT, "advance", 1, "控制字符横向间距", -Double.MAX_VALUE,Double.MAX_VALUE);
+        Property height = config.get(CLIENT, "height", 8, "控制字符高度", -Double.MAX_VALUE,Double.MAX_VALUE);
+        Property shadowOffsetX = config.get(CLIENT, "shadowOffsetX", 0.5, "控制字体阴影横向偏移", -Double.MAX_VALUE,Double.MAX_VALUE);
+        Property shadowOffsetY = config.get(CLIENT, "shadowOffsetY", 0.5, "控制字体阴影纵向偏移", -Double.MAX_VALUE,Double.MAX_VALUE);
+        Property fixWidth = config.get(CLIENT,"fixWidth",7,"固定宽度模式下的宽度值",-Double.MAX_VALUE,Double.MAX_VALUE);
 
         Property useUnicodeFix = config.get(CLIENT, "useUnicodeFix", true, "是否启用unicode修复功能");
+        Property useFixWidth = config.get(CLIENT,"useFixWidth",false,"是否固定让每个字符的宽度一样");
 
         properties.add(advance);
         properties.add(height);
         properties.add(shadowOffsetX);
         properties.add(shadowOffsetY);
+        properties.add(fixWidth);
 
         properties.add(useUnicodeFix);
+        properties.add(useFixWidth);
 
         properties.forEach(consumer);
     }

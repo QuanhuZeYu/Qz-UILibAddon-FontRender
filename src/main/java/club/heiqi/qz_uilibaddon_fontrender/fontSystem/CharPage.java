@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -32,7 +33,7 @@ import static org.lwjgl.opengl.GL30.glGenerateMipmap;
  */
 public class CharPage {
     public static Logger LOG = LogManager.getLogger();
-    /**标识符(type-char):字符页*/
+    /**标识符(fontName-type-count):字符页*/
     public static ConcurrentHashMap<String,CharPage> allPages = new ConcurrentHashMap<>();
     /**存储格式要求 type-char*/
     public static ConcurrentSet<String> charWithType = new ConcurrentSet<>();
@@ -48,6 +49,7 @@ public class CharPage {
     public volatile short charCount = 0;
     /** 当前字符页存储的字符记录 - 字符: 字符信息*/
     public ConcurrentHashMap<String,StoredChar> chars = new ConcurrentHashMap<>();
+    public List<String> charList = new CopyOnWriteArrayList<>();
     /** skia */
     public volatile Font font;
     public volatile Surface surface;
@@ -69,6 +71,18 @@ public class CharPage {
         allPages.put(this.markInfo,this);
     }
 
+    public CharPage(String type,Font font,short pageSize,short charSize) {
+        surface = Surface.makeRaster(ImageInfo.makeN32Premul(pageSize,pageSize));
+        canvas = surface.getCanvas();
+        paint = new Paint().setAntiAlias(true).setColor4f(new Color4f(255,255,255,255));
+        String fontName = font.getTypeface().getFamilyName();
+        int count = findPageWithFont(font).size();
+        this.markInfo = fontName+"-"+type+"-"+count;
+        this.font = font.makeWithSize(charSize*0.90f);
+        allPages.put(this.markInfo,this);
+    }
+
+    /**待添加队列*/
     public LinkedBlockingDeque<String> waitList = new LinkedBlockingDeque<>();
     public Lock lock = new ReentrantLock(true);
     public void addChar(String c) {
@@ -106,6 +120,7 @@ public class CharPage {
                 charCount++;
                 StoredChar storedChar = new StoredChar(this, c1,(short) leftTop.x,(short) leftTop.y,(short) leftTop.x, (short) (leftTop.x+width));
                 chars.put(c1,storedChar);
+                charList.add(c1);
                 String hashString = markInfo.split("-")[1]+"-"+ c1;
                 charWithType.add(hashString);
                 addCharTime = System.currentTimeMillis();
@@ -117,8 +132,27 @@ public class CharPage {
         }).start();
     }
 
+    public String getPageType() {
+        String[] ss = markInfo.split("-");
+        return ss[1];
+    }
+
+    public int getMaxMipMap() {
+        int count = 0;
+        int copySize = size;
+        while (copySize > 4) {
+            copySize /= 2;
+            count++;
+        }
+        return count;
+    }
+
+    public long fullTime = Long.MAX_VALUE;
     public boolean isFull() {
-        return charCount + waitList.size() >= getMaxCharCount();
+        if(charCount + waitList.size() >= getMaxCharCount()) {
+            fullTime = System.currentTimeMillis();
+        }
+        return false;
     }
 
     public boolean addDone() {
@@ -171,30 +205,10 @@ public class CharPage {
         glGenerateMipmap(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D,0);
         imageSnapshot.close();pixmap.close();
-
+        /*for (int i = 1; i <= 2; i++) {
+            genMipMap(i);
+        }*/
         canUpload = false;
-    }
-
-    public void setPageSize(short size) {
-        if (!chars.isEmpty() || !waitList.isEmpty()) {
-            throw new RuntimeException("当字符页存有字符时不允许被重置字符页大小");
-        }
-        this.size = size;
-        surface.close();
-        charCount = 0;
-
-        surface = Surface.makeRaster(ImageInfo.makeN32Premul(size,size));
-        canvas = surface.getCanvas();
-        chars.clear();
-    }
-
-    /**
-     * 重置画布并设置字体大小
-     * @param size
-     */
-    public void setCharSize(short size) {
-        setPageSize(this.size);
-        this.charSize = size;
     }
 
     /**
@@ -227,11 +241,85 @@ public class CharPage {
     }
 
     public void dispose() {
+        if (!isSkijaDelete) {
+            surface.close();
+            paint.close();
+        }
         chars.clear();
-        surface.close();
-        paint.close();
-        glDeleteTextures(textureID);
+        charList.clear();
+        allPages.remove(markInfo);
+        if (textureID != -1) {
+            glDeleteTextures(textureID);
+        }
     }
+
+    public boolean isSkijaDelete = false;
+    public void whenFullPost() {
+        // 当页面字符存满后自动清除skija的引用内容
+        if (isFull() && System.currentTimeMillis() - fullTime >= 60_000 && !isSkijaDelete) {
+            surface.close();
+            paint.close();
+            isSkijaDelete = true;
+        }
+    }
+
+    public void genMipMap(int level) {
+        // 覆盖部分层级
+        CharPage page = new CharPage(getPageType(),font, (short) (size/(2*level)), (short) (charSize/(2*level)));
+        for (String c : this.charList) {
+            page.addChar(c);
+        }
+        while (!page.addDone()) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        Image imageSnapshot = page.surface.makeImageSnapshot();
+        ImageInfo imageInfo = imageSnapshot.getImageInfo();
+        int width = imageInfo.getWidth();
+        int height = imageInfo.getHeight();
+        int rowBytes = width*4;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(width*height*4);
+        Pixmap pixmap = Pixmap.make(imageInfo,byteBuffer,rowBytes);
+        if (!page.surface.readPixels(pixmap,0,0)) {
+            return;
+        }
+
+        glBindTexture(GL_TEXTURE_2D,this.textureID);
+        // 设置纹理参数
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // 上传纹理数据
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            level,
+            GL_BGRA,
+            width,
+            height,
+            0,
+            GL_BGRA,
+            GL_UNSIGNED_BYTE,
+            pixmap.getBuffer()
+        );
+        page.dispose();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * 寻找有指定Font的Page
@@ -363,7 +451,10 @@ public class CharPage {
 
     public static void uploadAll() {
         for (CharPage page : allPages.values()) {
+            if (page.uploadTime > page.addCharTime) continue;
             page.uploadTexture();
+            if (page.isFull() && !page.isSkijaDelete)
+                page.whenFullPost();
         }
     }
 
@@ -377,10 +468,6 @@ public class CharPage {
         allPages.clear();
         charWithType.clear();
     }
-
-
-
-
 
 
     public static class StoredChar {

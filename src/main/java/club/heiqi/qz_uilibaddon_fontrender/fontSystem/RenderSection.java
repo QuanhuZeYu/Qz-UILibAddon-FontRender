@@ -15,7 +15,7 @@ public class RenderSection {
     public int rgb;
     public float alpha;
     public int mask;
-    public String text = "";
+    public StringBuilder builder = new StringBuilder();
 
     public int restRGB;
     public float restAlpha;
@@ -37,14 +37,14 @@ public class RenderSection {
         this.rgb = rgb;
         this.alpha = alpha;
         this.mask = mask;
-        this.text = text;
+        this.builder.append(text);
         this.restRGB = restRGB;
         this.restAlpha = restAlpha;
         this.rest = rest;
     }
 
     public void appendString(String text) {
-        this.text += text;
+        this.builder.append(text);
     }
 
     public void addMask(int mask) {
@@ -76,7 +76,7 @@ public class RenderSection {
         this.mask = mask;
         addMask(mask);
         this.rgb = rgb;
-        this.text = text;
+        this.builder.append(text);
         this.alpha = alpha;
         this.restRGB = restRGB;
         this.restAlpha = restAlpha;
@@ -116,6 +116,6 @@ public class RenderSection {
     }
 
     public RenderSection copy() {
-        return new RenderSection(isStart, hasColor, end, random, bold, delete, underline, italic, rgb, alpha, mask, text, restRGB, restAlpha, rest);
+        return new RenderSection(isStart, hasColor, end, random, bold, delete, underline, italic, rgb, alpha, mask, builder.toString(), restRGB, restAlpha, rest);
     }
 }

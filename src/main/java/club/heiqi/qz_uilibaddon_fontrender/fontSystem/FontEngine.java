@@ -83,7 +83,85 @@ public class FontEngine {
         // 3.使用获取到的字形信息进行渲染操作
         width = (storedChar.right-storedChar.left)*(8f/storedChar.charPage.charSize);
         storedChar.renderAt(x,y,width, (float) Config.height);
-        return (float) (Math.min(width,8) + Config.advance);
+
+        if (Config.useFixWidth) {
+            return (float) Config.fixWidth;
+        }
+        else {
+            return (float) (Math.min(width,8) + Config.advance);
+        }
+    }
+
+    public static int getCharWidth(String c) {
+        if (Config.useFixWidth) return (int) Config.fixWidth;
+        float width = 8f;
+        if (c.equals(" ")) return (int) (width/2f);
+        CharType type = CharType.NORMAL;
+        String hashName = type.type+"-"+c;
+        // 1.确认字符页存在该字形
+        if (!CharPage.charWithType.contains(hashName)) {
+            switch (type) {
+                case NORMAL -> {
+                    CharPage.autoAddNormalChar(c,FontLoader.fonts);
+                }
+                case BOLD -> {
+                    CharPage.autoAddBoldChar(c,FontLoader.fonts);
+                }
+                case ITALY -> {
+                    CharPage.autoAddItalyChar(c,FontLoader.fonts);
+                }
+            }
+            CharPage.autoAddNormalChar(c, FontLoader.fonts);
+        }
+        // 2.获取字形信息
+        CharPage.StoredChar storedChar;
+        if (!cache.asMap().containsKey(hashName)) {
+            storedChar = CharPage.findStoredChar(type.type,c);
+            if (storedChar == null) return (int) (width/2f); // 字形为null可能是还未添加完毕
+            cache.put(hashName,storedChar);
+        }
+        else {
+            storedChar = cache.asMap().get(hashName);
+        }
+        // 3.使用获取到的字形信息
+        width = (storedChar.right-storedChar.left)*(8f/storedChar.charPage.charSize);
+        return (int) width;
+    }
+
+    public static float getCharWidthF(String c) {
+        if (Config.useFixWidth) return (float) Config.fixWidth;
+        float width = 8f;
+        if (c.equals(" ")) return (int) (width/2f);
+        CharType type = CharType.NORMAL;
+        String hashName = type.type+"-"+c;
+        // 1.确认字符页存在该字形
+        if (!CharPage.charWithType.contains(hashName)) {
+            switch (type) {
+                case NORMAL -> {
+                    CharPage.autoAddNormalChar(c,FontLoader.fonts);
+                }
+                case BOLD -> {
+                    CharPage.autoAddBoldChar(c,FontLoader.fonts);
+                }
+                case ITALY -> {
+                    CharPage.autoAddItalyChar(c,FontLoader.fonts);
+                }
+            }
+            CharPage.autoAddNormalChar(c, FontLoader.fonts);
+        }
+        // 2.获取字形信息
+        CharPage.StoredChar storedChar;
+        if (!cache.asMap().containsKey(hashName)) {
+            storedChar = CharPage.findStoredChar(type.type,c);
+            if (storedChar == null) return width/2f; // 字形为null可能是还未添加完毕
+            cache.put(hashName,storedChar);
+        }
+        else {
+            storedChar = cache.asMap().get(hashName);
+        }
+        // 3.使用获取到的字形信息
+        width = (storedChar.right-storedChar.left)*(8f/storedChar.charPage.charSize);
+        return width;
     }
 
     /**

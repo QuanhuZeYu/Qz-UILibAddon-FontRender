@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +127,7 @@ public abstract class FontRenderer_Mixin {
             }
             else {
                 // 起始为空 颜色取color动态缓存的
-                if (forSection.text.isEmpty()) {
+                if (forSection.builder.toString().isEmpty()) {
                     forSection.setRGB(color);
                     forSection.alpha = ((FontRenderer)((Object)this)).alpha;
                 }
@@ -149,8 +150,8 @@ public abstract class FontRenderer_Mixin {
         for (RenderSection section : sections) {
             section.setGLColor();
             ((FontRenderer) ((Object) this)).textColor = section.rgb;
-            for (int i = 0; i < section.text.length(); i++) {
-                int codepoint = section.text.codePointAt(i);
+            for (int i = 0; i < section.builder.length(); i++) {
+                int codepoint = section.builder.codePointAt(i);
                 String c = new String(Character.toChars(codepoint));
                 float width = FontEngine.renderCharAt(c,((FontRenderer)((Object)this)).posX,((FontRenderer)((Object)this)).posY,section.mask);
                 section.renderExtraStyle(((FontRenderer)((Object)this)).posX,((FontRenderer)((Object)this)).posY,width, (float) Config.height);
@@ -159,5 +160,21 @@ public abstract class FontRenderer_Mixin {
             section.restGLColor();
         }
         ci.cancel();
+    }
+
+    @Inject(
+        method = "getStringWidth",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    public void qz_uilibAddon_fontRender$getStringWidth(String s, CallbackInfoReturnable<Integer> ci) {
+        if (!ClientProxy.isInit || s == null || s.isEmpty()) return;
+        float width = 0;
+        for (int i = 0; i < s.length(); i++) {
+            int codepoint = s.codePointAt(i);
+            String c = new String(Character.toChars(codepoint));
+            width += FontEngine.getCharWidthF(c);
+        }
+        ci.setReturnValue((int) width);
     }
 }
